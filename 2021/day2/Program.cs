@@ -70,6 +70,6 @@ List<string> GetLines(bool test) {
 }
 
 record Movement {
-    public string Direction {get;set;} = "forward";
-    public int Speed {get;set;} = 0;
+    public string Direction = "forward";
+    public int Speed;
 }
