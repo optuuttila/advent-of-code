@@ -1,45 +1,32 @@
-﻿Console.WriteLine("Day 3.");
+﻿Console.WriteLine("Day 3. Binary diagnostic");
 var runInTestMode = true;
 if (runInTestMode) {
     Console.WriteLine("Running with test input.");
-    Console.WriteLine(" Excepted result 1: 150");
-    //Console.WriteLine(" Excepted result 2: 900");
+    Console.WriteLine(" Excepted result 1: 198");
+    Console.WriteLine(" Excepted result 2: 230 (oxygen: 23, co2: 10)");
 
     Console.WriteLine(" Add your real input to input.txt file and change the runInTestMode to false");
 }
 
 var data = GetTaskData(runInTestMode);
 
-(var sum, var gamma, var epsilon, var co2, var oxygen) = CalculateX(data);
+(var sum, var gamma, var epsilon) = CalculateGammaAndEpsilon(data);
 Console.WriteLine($"Result 1: gamma {gamma} and epsilon {epsilon} have decimal sum of {sum}");
 
-(var d, var binary) = CalculateTwo(data, true);
-Console.WriteLine($"Result 2: oxygen {binary} have decimal sum of {d}");
-(d, binary) = CalculateTwo(data, false);
-Console.WriteLine($"Result 2: c02 {binary} have decimal sum of {d}");
+(var oxygen, var binary) = CalculateLifeSupport(data, true);
+Console.WriteLine($"Result 2: oxygen {binary} has a decimal sum of {oxygen}");
 
-//(gammaRate, depth) = CalculateX(data, true);
+(var co2, binary) = CalculateLifeSupport(data, false);
+Console.WriteLine($"Result 2: c02 {binary} has a decimal sum of {co2}");
 
-//Console.WriteLine($"Result 2: {position * depth}");
+Console.WriteLine($"Result 2 final: {oxygen * co2}");
 
-//Testing out the multiple return values
-(int sum, string gamma, string epsilon, List<string> co2, List<string> oxygen) CalculateX(List<string> inputs) {
+(int sum, string gamma, string epsilon) CalculateGammaAndEpsilon(List<string> inputs) {
     string gamma = "";
     string epsilon = "";
-    var oxygen = new List<string>();
-    var co2 = new List<string>();
     for(int i=0; i < inputs[0].Length; i++) {
-        int zero = 0;
-        int one = 1;        
-        foreach(var input in inputs) {
-            var bit = input.Skip(i).Take(1).First();
-            if (bit == '0') {
-                zero++;
-            } else {
-                one++;
-            }
-        }
-        //Console.WriteLine(zero + " " + one);
+        (var zero, var one) = GetZeroOne(inputs, i);
+ 
         if (zero > one) {
             gamma += "0";
             epsilon += "1";
@@ -53,13 +40,12 @@ Console.WriteLine($"Result 2: c02 {binary} have decimal sum of {d}");
     var e = Convert.ToInt32(epsilon,2);
     var sum = g*e;
 
-    return (sum, gamma, epsilon, co2, oxygen);
+    return (sum, gamma, epsilon);
 }
-
 
 (int zero, int one) GetZeroOne(List<string> inputs, int position) {
     int zero = 0;
-    int one = 1;        
+    int one = 0;        
     foreach(var input in inputs) {
         var bit = input.Skip(position).Take(1).First();
         if (bit == '0') {
@@ -72,30 +58,57 @@ Console.WriteLine($"Result 2: c02 {binary} have decimal sum of {d}");
     return (zero, one);
 }
 
-(int d, string binary) CalculateTwo(List<string> inputs, bool bitToUse) {
-    string gamma = "";
-    string epsilon = "";
-    for(int i=0; i < 5; i++) {
+(int d, string binary) CalculateLifeSupport(List<string> inputs, bool bitToUse) {
+    //Create local copy so that the original input can be reused
+    var copy = new List<string>(inputs);
+        
+    for(int i=0; i < inputs[0].Length; i++) {
         var workList = new List<string>();
-        workList.AddRange(inputs);
+        workList.AddRange(copy);
         (var zero, var one) = GetZeroOne(workList, i);
-        Console.WriteLine($"zero: {zero}, one:  {one}");
+
         foreach(var input in workList) {
-            if (bitToUse && one >= zero) {
-                inputs.RemoveAll(x=>x==input);
-            } 
-            if (!bitToUse && zero >= one) {
-                inputs.RemoveAll(x=>x==input);
+            var current = input.Skip(i).Take(1).First();
+            if (bitToUse)
+            {
+                if (one > zero && current == '0')
+                {
+                    copy.RemoveAll(x => x == input);
+                }
+                if (zero > one && current == '1')
+                {
+                    copy.RemoveAll(x => x == input);
+                }
             }
+            else
+            {
+                if (one > zero && current == '1')
+                {
+                    copy.RemoveAll(x => x == input);
+                }
+                if (zero > one && current == '0')
+                {
+                    copy.RemoveAll(x => x == input);
+                }
+            }
+            if (zero == one && bitToUse && current == '0')
+            {
+                copy.RemoveAll(x => x == input);
+            }
+            if (zero == one && !bitToUse && current == '1')
+            {
+                copy.RemoveAll(x => x == input);
+            }
+
         }
-        Console.WriteLine(inputs.Count);
-        if (inputs.Count == 1) {
+        //Exit if we only have one left as that is the one!
+        if (copy.Count == 1) {
             break;
         }
     }
-    Console.WriteLine(inputs.Count + " " + inputs.First());
-
-    return (0, inputs.First());
+    var binary = copy.First();
+    var d = Convert.ToInt32(binary, 2);
+    return (d, binary);
 }
 
 
